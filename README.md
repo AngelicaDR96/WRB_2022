@@ -2,7 +2,7 @@
 dictionaries, objects, and codes to digitize the International Soil Classification System (WRB 2022).
 
 
-1. check_WRB_classification_from_db
+# check_WRB_classification_from_db
 The code automatically verifies that the data collected during a pedological survey are consistent with the rules of the International Soil Classification System (WRB 2022 - https://wrb.isric.org/files/WRB_fourth_edition_2022-12-18_errata_correction_2024-09-24.pdf). In particular, the code checks whether the principal and supplementary qualifiers attributed to a soil type are among those allowed by WRB 2022, pages 96–126.
 
   The code runs on a db such as the following

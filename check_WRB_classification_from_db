@@ -819,7 +819,7 @@ output_path = your_out_path
 
 # --- read the database --- #
 df = your_db
-sec_col, pri_col, rsg_col = "Secondary Qualifiers (first)", "Principal Qualifiers", "Reference Soil Group"
+sec_col, pri_col, rsg_col = "Supplementary Qualifiers", "Principal Qualifiers", "Reference Soil Group"
 
 # --- lookup code for soil_types dictionary --- #
 name_by_code = {v['code']: v['name'] for v in qualifiers.values()}
@@ -857,16 +857,16 @@ def code_of(cell):
 
 def check(code, rsg, own, other):
     if code is None:
-        return "vuoto"
+        return "NaN"
     if rsg not in allowed:
-        return "RSG sconosciuto"
+        return "unknown RSG"
     if code not in name_by_code:
-        return "codice non esistente"
+        return "wrong code-name"
     if code in allowed[rsg][own]:
         return "OK"
     if code in allowed[rsg][other]:
-        return f"ammesso solo come {'supplementary' if other=='suppl' else 'principal'}"
-    return "NON ammesso per questo RSG"
+        return f"allowed as {'supplementary' if other=='suppl' else 'principal'}"
+    return "not allowed for this RSG"
 
 def name_ok(cell):
     if pd.isna(cell): return True
@@ -875,7 +875,7 @@ def name_ok(cell):
 
 def save(df: pd.DataFrame, name: str) -> None:
     df.to_excel(out_dir / name, index=False)
-    print(f"[salvato] {name:<75} righe: {len(df)}")
+    print(f"[saved] {name:<75} righe: {len(df)}")
 
 # --- distinguish allowed qualifiers for each soil type --- #
 allowed = {
@@ -888,12 +888,12 @@ allowed = {
 
 df["rsg_code"]  = df[rsg_col].map(code_of)
 df["pri_code"]  = df[pri_col].map(code_of)
-df["sec_code"]  = df[sec_col].map(code_of)
+df["sup_code"]  = df[sec_col].map(code_of)
 df["check_principal"] = [check(c, r, "principal", "suppl") for c, r in zip(df.pri_code, df.rsg_code)]
-df["check_secondary"] = [check(c, r, "suppl", "principal") for c, r in zip(df.sec_code, df.rsg_code)]
-df["nome_coerente"] = df[pri_col].map(name_ok) & df[sec_col].map(name_ok)
+df["check_supplementary"] = [check(c, r, "suppl", "principal") for c, r in zip(df.sup_code, df.rsg_code)]
+df["check_code-name"] = df[pri_col].map(name_ok) & df[sup_col].map(name_ok)
 
 # --- wrong classification report --- #
-errori = df[(~df.check_principal.isin(["OK", "vuoto"])) |
-            (~df.check_secondary.isin(["OK", "vuoto"])) | (~df.nome_coerente)]
-save(errori, output_path)
+errors = df[(~df.check_principal.isin(["OK", "NaN"])) |
+            (~df.check_supplementary.isin(["OK", "NaN"])) | (~df.check_code-name)]
+save(errors, output_path)
